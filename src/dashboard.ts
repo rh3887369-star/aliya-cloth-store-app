@@ -146,26 +146,7 @@ type ProductMeasurement = {
   additional_details: string;
 };
 
-type ProductVariant = {
-  id: number;
-  product_id: number;
-  variant_name: string;
-  variant_value: string;
-  sku: string | null;
-  price_adjustment: number;
-  stock_quantity: number;
-  available: boolean;
-};
 
-type ProductImage = {
-  id: number;
-  product_id: number;
-  image_url: string;
-  storage_path: string | null;
-  alt_text: string;
-  display_order: number;
-  is_primary: boolean;
-};
 
 const dashboardApp =
   document.querySelector<HTMLDivElement>(
@@ -259,15 +240,7 @@ const escapeHtml = (
     .replaceAll("'", "&#039;");
 };
 
-const createSlug = (
-  value: string
-): string => {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
+
 
 const formatMoney = (
   amount: number
@@ -291,36 +264,8 @@ const formatDate = (
   );
 };
 
-const calculateDiscountPercent = (
-  price: number,
-  compareAtPrice: number | null
-): number => {
-  if (
-    compareAtPrice === null ||
-    compareAtPrice <= 0 ||
-    price >= compareAtPrice
-  ) {
-    return 0;
-  }
 
-  return Math.round(
-    ((compareAtPrice - price) /
-      compareAtPrice) *
-      100
-  );
-};
 
-const createUniqueProductCode = () => {
-  return `ACS-${Date.now()}-${Math.floor(
-    Math.random() * 1000
-  )}`;
-};
-
-const createUniqueSku = () => {
-  return `ACS-SKU-${Date.now()}-${Math.floor(
-    Math.random() * 1000
-  )}`;
-};
 
 const getFileExtension = (
   file: File
@@ -345,19 +290,7 @@ const createStoragePath = (
   );
 };
 
-const setFormMessage = (
-  selector: string,
-  text: string
-) => {
-  const message =
-    document.querySelector<HTMLElement>(
-      selector
-    );
 
-  if (message) {
-    message.textContent = text;
-  }
-};
 
 // ======================================================
 // CHECK ADMIN LOGIN
@@ -2205,9 +2138,9 @@ const updateSalePrice = () => {
   salePriceInput.value = salePrice.toFixed(2);
 };
 
-priceInput.addEventListener("input", updateSalePrice);
-discountInput.addEventListener("input", updateSalePrice);
 
+priceInput?.addEventListener("input", updateSalePrice);
+discountInput?.addEventListener("input", updateSalePrice);
 updateSalePrice();
   
   await loadProductCategoryDropdowns();
@@ -2366,7 +2299,7 @@ const uploadProductImage = async (
     storagePath,
   };
 };
-
+void uploadProductImage;
 // ======================================================
 // READ PRODUCT FORM VALUES
 // ======================================================
@@ -2797,8 +2730,7 @@ const originalPrice =
 const discountPercent =
   getNumberValue("#product-discount-percent");
 
-const salePrice =
-  getNumberValue("#product-sale-price");
+
   
   const stockQuantity =
     getNumberValue("#product-stock-quantity");
@@ -3032,6 +2964,9 @@ const salePrice =
         image: imageUrl,
         category,
         description,
+        top_length: topLength,
+bottom_length: bottomLength,
+dupatta_length: dupattaLength,
 
         color,
         print,
@@ -3039,7 +2974,7 @@ const salePrice =
         available,
 
         // Your products.price column is the original price.
-        price: salePrice,
+        price: calculatedSalePrice,
 
         compare_at_price: originalPrice,
         discount_percent: discountPercent,
