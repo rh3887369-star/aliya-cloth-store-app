@@ -10,6 +10,10 @@ export default defineConfig({
         dashboard: fileURLToPath(
           new URL("./dashboard.html", import.meta.url)
         ),
+        resetPassword: fileURLToPath(
+  new URL("./reset-password.html", import.meta.url)
+),
+
       },
     },
   },
