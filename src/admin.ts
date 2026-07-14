@@ -21,7 +21,6 @@ document.querySelector<HTMLDivElement>("#admin-app")!.innerHTML = `
         </p>
       </div>
 
-
       <form id="admin-login-form">
 
         <label for="admin-email">
@@ -36,7 +35,6 @@ document.querySelector<HTMLDivElement>("#admin-app")!.innerHTML = `
           placeholder="Enter admin email"
         />
 
-
         <label for="admin-password">
           Password
         </label>
@@ -49,12 +47,18 @@ document.querySelector<HTMLDivElement>("#admin-app")!.innerHTML = `
           placeholder="Enter password"
         />
 
+        <button
+          id="forgot-password-button"
+          type="button"
+          class="forgot-password-button"
+        >
+          Forgot Password?
+        </button>
 
         <p
           id="login-message"
           class="login-message"
         ></p>
-
 
         <button
           id="login-button"
@@ -96,6 +100,15 @@ const loginButton =
     "#login-button"
   );
 
+const forgotPasswordButton =
+  document.querySelector<HTMLButtonElement>(
+    "#forgot-password-button"
+  );
+
+
+/* =========================
+   ADMIN LOGIN
+========================= */
 
 loginForm?.addEventListener(
   "submit",
@@ -111,7 +124,6 @@ loginForm?.addEventListener(
     ) {
       return;
     }
-
 
     loginMessage.textContent = "";
 
@@ -152,6 +164,89 @@ loginForm?.addEventListener(
 
     window.location.href =
       "/dashboard.html";
+
+  }
+);
+
+
+/* =========================
+   FORGOT PASSWORD
+========================= */
+
+forgotPasswordButton?.addEventListener(
+  "click",
+  async () => {
+
+    if (
+      !emailInput ||
+      !loginMessage ||
+      !forgotPasswordButton
+    ) {
+      return;
+    }
+
+
+    const email =
+      emailInput.value.trim();
+
+
+    if (!email) {
+
+      loginMessage.textContent =
+        "Enter your admin email first.";
+
+      loginMessage.className =
+        "login-message error";
+
+      return;
+    }
+
+
+    forgotPasswordButton.disabled = true;
+
+    forgotPasswordButton.textContent =
+      "Sending Reset Link...";
+
+    loginMessage.textContent = "";
+
+
+    const { error } =
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo:
+            `${window.location.origin}/reset-password.html`,
+        }
+      );
+
+
+    if (error) {
+
+      loginMessage.textContent =
+        error.message;
+
+      loginMessage.className =
+        "login-message error";
+
+      forgotPasswordButton.disabled = false;
+
+      forgotPasswordButton.textContent =
+        "Forgot Password?";
+
+      return;
+    }
+
+
+    loginMessage.textContent =
+      "Password reset link sent. Check your email.";
+
+    loginMessage.className =
+      "login-message success";
+
+    forgotPasswordButton.disabled = false;
+
+    forgotPasswordButton.textContent =
+      "Forgot Password?";
 
   }
 );
