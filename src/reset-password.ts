@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-
+import "./reset-password.css";
 document.querySelector<HTMLDivElement>("#reset-password-app")!.innerHTML = `
   <main>
     <h1>Set New Password</h1>
