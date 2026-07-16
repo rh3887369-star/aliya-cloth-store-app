@@ -3006,6 +3006,9 @@ const {
     stock_quantity: stockQuantity,
 
     fabric,
+    top_length: topLength,
+bottom_length: bottomLength,
+dupatta_length: dupattaLength,
     material,
     work_type: workType,
     occasion,
