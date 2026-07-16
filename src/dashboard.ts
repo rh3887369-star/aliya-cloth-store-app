@@ -1458,22 +1458,20 @@ const createProductFormFields = (
         >
       </label>
 
-      <label class="product-form-field">
-        <span>
-          ${
-            mode === "add"
-              ? "Primary Product Image"
-              : "New Primary Image (Optional)"
-          }
-        </span>
+     <label class="product-form-field">
+  <span>Gallery Images</span>
 
-        <input
-          type="file"
-          id="${prefix}-image"
-          accept="image/jpeg,image/png,image/webp"
-          ${mode === "add" ? "required" : ""}
-        >
-      </label>
+  <input
+    type="file"
+    id="${prefix}-gallery-images"
+    accept="image/jpeg,image/png,image/webp"
+    multiple
+  />
+
+  <small>
+    Select up to 10 additional product images.
+  </small>
+</label>
 
       <label class="product-form-field">
   <span>Category</span>
@@ -1852,12 +1850,31 @@ const showAddProductForm = async () => {
             <label class="product-form-field">
               <span>Primary Product Image</span>
 
-              <input
-                type="file"
-                id="product-image"
-                accept="image/jpeg,image/png,image/webp"
-                required
-              >
+              <label class="product-form-field">
+  <span>Primary Product Image</span>
+
+  <input
+    type="file"
+    id="product-image"
+    accept="image/jpeg,image/png,image/webp"
+    required
+  >
+</label>
+
+<label class="product-form-field product-description-field">
+  <span>Gallery Images (Optional)</span>
+
+  <input
+    type="file"
+    id="product-gallery-images"
+    accept="image/jpeg,image/png,image/webp"
+    multiple
+  >
+
+  <small>
+    Select up to 10 additional product images.
+  </small>
+</label>
             </label>
 
 
@@ -2712,12 +2729,21 @@ const saveNewProduct = async (
 
   const name = getInputValue("#product-name");
 
-  const imageInput =
-    document.querySelector<HTMLInputElement>(
-      "#product-image"
-    );
+ const imageInput =
+  document.querySelector<HTMLInputElement>(
+    "#product-image"
+  );
 
-  const imageFile = imageInput?.files?.[0];
+const imageFile = imageInput?.files?.[0];
+
+const galleryInput =
+  document.querySelector<HTMLInputElement>(
+    "#product-gallery-images"
+  );
+
+const galleryFiles = Array.from(
+  galleryInput?.files ?? []
+);
 
   const category =
     getInputValue("#product-category");
@@ -2795,6 +2821,7 @@ const discountPercent =
   if (
     !name ||
     !imageFile ||
+    galleryFiles.length === 0 ||
     !category ||
     !description ||
     !color ||
@@ -2802,7 +2829,7 @@ const discountPercent =
   ) {
     if (message) {
       message.textContent =
-        "Please fill all required product details.";
+        "Please select a cover image and at least one gallery image.";
     }
 
     return;
@@ -2952,46 +2979,76 @@ const discountPercent =
   // -----------------------------------------
   // INSERT PRODUCT
   // -----------------------------------------
+const {
+  data: insertedProduct,
+  error: insertError,
+} = await supabase
+  .from("products")
+  .insert({
+    code,
+    sku,
 
-  const { error: insertError } =
+    name,
+    image: imageUrl,
+    category,
+    description,
+
+    color,
+    print,
+
+    available,
+
+    price: calculatedSalePrice,
+
+    compare_at_price: originalPrice,
+    discount_percent: discountPercent,
+
+    stock_quantity: stockQuantity,
+
+    fabric,
+    material,
+    work_type: workType,
+    occasion,
+    wash_care: washCare,
+  })
+  .select("id")
+  .single();
+if (insertedProduct) {
+  let sortOrder = 1;
+
+  for (const galleryFile of galleryFiles) {
+    const extension =
+      galleryFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+
+    const galleryFileName =
+      `products/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+    const { error: galleryUploadError } =
+      await supabase.storage
+        .from("product-images")
+        .upload(galleryFileName, galleryFile);
+
+    if (galleryUploadError) {
+      console.error(galleryUploadError);
+      continue;
+    }
+
+    const { data } =
+      supabase.storage
+        .from("product-images")
+        .getPublicUrl(galleryFileName);
+
     await supabase
-      .from("products")
+      .from("product_images")
       .insert({
-        code,
-        sku,
-
-        name,
-        image: imageUrl,
-        category,
-        description,
-        top_length: topLength,
-bottom_length: bottomLength,
-dupatta_length: dupattaLength,
-
-        color,
-        print,
-
-        available,
-
-        // Your products.price column is the original price.
-        price: calculatedSalePrice,
-
-        compare_at_price: originalPrice,
-        discount_percent: discountPercent,
-        
-
-        stock_quantity: stockQuantity,
-
-        fabric,
-        material,
-        work_type: workType,
-        occasion,
-        wash_care: washCare,
-
-        
+        product_id: insertedProduct.id,
+        image_url: data.publicUrl,
+        alt_text: name,
+        sort_order: sortOrder++,
+        is_primary: false,
       });
-
-
+  }
+}
   // -----------------------------------------
   // DATABASE INSERT FAILED
   // -----------------------------------------

@@ -61,17 +61,20 @@ const createProductCards = (productList: Product[]) => {
   return productList
     .map(
       (product) => `
-        <article class="product-card">
+       <article
+  class="product-card"
+  onclick="window.location.href='product-details.html?id=${product.id}'"
+>
 
           <div class="product-media">
 
-            <img
-              src="${product.image}"
-              alt="${escapeHtml(product.name)}"
-              class="product-image"
-              loading="lazy"
-            >
-
+           <img
+  src="${product.image}"
+  alt="${escapeHtml(product.name)}"
+  class="product-image"
+  loading="lazy"
+  onclick="window.location.href='product-details.html?id=${product.id}'"
+>
             <span class="product-category-badge">
               ${escapeHtml(product.category)}
             </span>
@@ -98,7 +101,12 @@ const createProductCards = (productList: Product[]) => {
               ${escapeHtml(product.code)}
             </p>
 
-            <h3>${escapeHtml(product.name)}</h3>
+           <h3
+  onclick="window.location.href='product-details.html?id=${product.id}'"
+  style="cursor:pointer;"
+>
+  ${escapeHtml(product.name)}
+</h3>
 
             <p class="product-description">
               ${escapeHtml(product.description)}
