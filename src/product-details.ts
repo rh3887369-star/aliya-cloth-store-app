@@ -1,5 +1,5 @@
 import "./style.css";
-import { getProducts, type Product } from "./product";
+import { getProducts} from "./product";
 
 const products = await getProducts();
 
