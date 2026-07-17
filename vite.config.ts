@@ -11,9 +11,11 @@ export default defineConfig({
           new URL("./dashboard.html", import.meta.url)
         ),
         resetPassword: fileURLToPath(
-  new URL("./reset-password.html", import.meta.url)
-),
-
+          new URL("./reset-password.html", import.meta.url)
+        ),
+        productDetails: fileURLToPath(
+          new URL("./product-details.html", import.meta.url)
+        ),
       },
     },
   },
