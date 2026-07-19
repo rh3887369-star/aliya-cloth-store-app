@@ -2578,9 +2578,7 @@ const galleryInput =
 const galleryFiles = Array.from(
   galleryInput?.files ?? []
 );
-const variantRows = Array.from(
-  document.querySelectorAll(".variant-row")
-);
+
 
   const category =
     getInputValue("#product-category");
