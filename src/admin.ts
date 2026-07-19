@@ -1,6 +1,18 @@
 import { supabase } from "./supabase";
 import "./admin.css";
+/* =========================
+   AUTO REDIRECT IF ALREADY LOGGED IN
+========================= */
 
+(async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    window.location.replace("/dashboard.html");
+  }
+})();
 document.querySelector<HTMLDivElement>("#admin-app")!.innerHTML = `
   <main class="admin-login-page">
 
@@ -162,8 +174,8 @@ loginForm?.addEventListener(
       "login-message success";
 
 
-    window.location.href =
-      "/dashboard.html";
+    window.location.replace(
+      "/dashboard.html");
 
   }
 );

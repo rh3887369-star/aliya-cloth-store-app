@@ -1413,7 +1413,50 @@ const showProducts = async () => {
 // ======================================================
 // SHARED PRODUCT FORM FIELDS
 // ======================================================
+const createVariantRow = (index: number) => `
+  <div class="variant-card" data-index="${index}">
 
+    <input
+      type="text"
+      placeholder="Color Name (Red)"
+      class="variant-color-name"
+    />
+
+    <input
+      type="color"
+      value="#000000"
+      class="variant-color-code"
+    />
+
+    <input
+      type="number"
+      placeholder="Price"
+      class="variant-price"
+    />
+
+    <input
+      type="number"
+      placeholder="Stock"
+      class="variant-stock"
+      value="0"
+    />
+
+    <input
+      type="file"
+      multiple
+      accept="image/*"
+      class="variant-images"
+    />
+
+    <button
+      type="button"
+      class="remove-variant-button"
+    >
+      Remove
+    </button>
+
+  </div>
+`;
 const createProductFormFields = (
   mode: "add" | "edit",
   product?: Product,
@@ -1449,6 +1492,20 @@ const createProductFormFields = (
 
       <label class="product-form-field">
         <span>Product Name</span>
+        <label class="product-form-field">
+  <span>Primary Product Image</span>
+
+  <input
+    type="file"
+    id="${prefix}-image"
+    accept="image/jpeg,image/png,image/webp"
+    ${
+      mode === "add"
+        ? "required"
+        : ""
+    }
+  >
+</label>
 
         <input
           type="text"
@@ -1457,6 +1514,23 @@ const createProductFormFields = (
           required
         >
       </label>
+      <div class="product-form-field product-variants-section">
+  <span>Color Variants</span>
+
+  <div id="${prefix}-variants-container"></div>
+
+  <button
+    type="button"
+    id="${prefix}-add-variant"
+    class="secondary-button"
+  >
+    + Add Color Variant
+  </button>
+
+  <small>
+    Add different colours like Red, Blue, Black etc.
+  </small>
+</div>
 
      <label class="product-form-field">
   <span>Gallery Images</span>
@@ -1810,6 +1884,7 @@ const showAddProductForm = async () => {
   pageTitle.textContent = "Add Product";
 
   content.innerHTML = `
+  
     <section class="product-form-section">
 
       <button
@@ -1832,304 +1907,63 @@ const showAddProductForm = async () => {
           </div>
         </div>
 
-        <form id="add-product-form">
+<form id="add-product-form">
 
-          <div class="product-form-grid">
+${createProductFormFields("add")}
 
-            <label class="product-form-field">
-              <span>Product Name</span>
+<div class="product-form-actions">
 
-              <input
-                type="text"
-                id="product-name"
-                required
-              >
-            </label>
+<button
+type="submit"
+class="save-product-button">
+Save Product
+</button>
 
+</div>
 
-            <label class="product-form-field">
-              <span>Primary Product Image</span>
+<p
+id="product-form-message"
+class="product-form-message">
+</p>
 
-              <label class="product-form-field">
-  <span>Primary Product Image</span>
+</form>
+          
 
-  <input
-    type="file"
-    id="product-image"
-    accept="image/jpeg,image/png,image/webp"
-    required
-  >
-</label>
 
-<label class="product-form-field product-description-field">
-  <span>Gallery Images (Optional)</span>
-
-  <input
-    type="file"
-    id="product-gallery-images"
-    accept="image/jpeg,image/png,image/webp"
-    multiple
-  >
-
-  <small>
-    Select up to 10 additional product images.
-  </small>
-</label>
-            </label>
-
-
-            <label class="product-form-field">
-  <span>Category</span>
-
- <select
-  id="product-category"
-  class="product-category-select"
-  data-selected-category=""
-  required
->
-  <option value="">Select Category</option>
-</select>
-</label>
-
-
-            <label class="product-form-field">
-              <span>SKU</span>
-
-              <input
-                type="text"
-                id="product-sku"
-                placeholder="Leave empty to generate automatically"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Original Price</span>
-
-              <input
-                type="number"
-                id="product-price"
-                min="0"
-                step="0.01"
-                required
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Discount %</span>
-
-              <input
-                type="number"
-                id="product-discount-percent"
-                min="0"
-                max="100"
-                step="0.01"
-                value="0"
-                required
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Sale Price (Auto Calculated)</span>
-
-              <input
-                type="number"
-                id="product-sale-price"
-                min="0"
-                step="0.01"
-                value="0"
-                readonly
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Stock Quantity</span>
-
-              <input
-                type="number"
-                id="product-stock-quantity"
-                min="0"
-                step="1"
-                value="0"
-                required
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Color</span>
-
-              <input
-                type="text"
-                id="product-color"
-                required
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Print / Pattern</span>
-
-              <input
-                type="text"
-                id="product-print"
-                required
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Fabric</span>
-
-              <input
-                type="text"
-                id="product-fabric"
-                placeholder="Example: Cotton"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Material</span>
-
-              <input
-                type="text"
-                id="product-material"
-                placeholder="Example: 100% Cotton"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Work Type</span>
-
-              <input
-                type="text"
-                id="product-work-type"
-                placeholder="Example: Printed"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Occasion</span>
-
-              <input
-                type="text"
-                id="product-occasion"
-                placeholder="Example: Casual, Festive"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Top Length (meter)</span>
-
-              <input
-                type="number"
-                id="product-top-length"
-                min="0"
-                step="0.01"
-                value="2.5"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Bottom Length (meter)</span>
-
-              <input
-                type="number"
-                id="product-bottom-length"
-                min="0"
-                step="0.01"
-                value="2.5"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Dupatta Length (meter)</span>
-
-              <input
-                type="number"
-                id="product-dupatta-length"
-                min="0"
-                step="0.01"
-                value="2.25"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Wash Care</span>
-
-              <input
-                type="text"
-                id="product-wash-care"
-                placeholder="Example: Gentle hand wash"
-              >
-            </label>
-
-
-            <label class="product-form-field">
-              <span>Available</span>
-
-              <select id="product-available">
-
-                <option value="true" selected>
-                  Yes
-                </option>
-
-                <option value="false">
-                  No
-                </option>
-
-              </select>
-            </label>
-
-
-            <label
-              class="product-form-field product-description-field"
-            >
-              <span>Description</span>
-
-              <textarea
-                id="product-description"
-                rows="5"
-                required
-              ></textarea>
-            </label>
-
-          </div>
-
-
-          <div class="product-form-actions">
-
-            <button
-              type="submit"
-              class="save-product-button"
-            >
-              Save Product
-            </button>
-
-          </div>
-
-
-          <p
-            id="product-form-message"
-            class="product-form-message"
-          ></p>
-
-        </form>
 
       </div>
 
     </section>
   `;
+  // ===========================
+// INITIALIZE VARIANT SECTION
+// ===========================
+
+const variantsContainer = document.querySelector(
+  "#product-variants-container"
+) as HTMLDivElement | null;
+
+const addVariantButton = document.querySelector(
+  "#product-add-variant"
+) as HTMLButtonElement | null;
+
+if (variantsContainer && addVariantButton) {
+
+  let variantIndex = 0;
+
+  variantsContainer.innerHTML =
+    createVariantRow(variantIndex++);
+
+  addVariantButton.addEventListener("click", () => {
+
+    variantsContainer.insertAdjacentHTML(
+      "beforeend",
+      createVariantRow(variantIndex++)
+    );
+
+  });
+
+}
 
   // -----------------------------------------
   // AUTOMATIC SALE PRICE CALCULATION
@@ -2744,6 +2578,9 @@ const galleryInput =
 const galleryFiles = Array.from(
   galleryInput?.files ?? []
 );
+const variantRows = Array.from(
+  document.querySelectorAll(".variant-row")
+);
 
   const category =
     getInputValue("#product-category");
@@ -3017,6 +2854,85 @@ dupatta_length: dupattaLength,
   .select("id")
   .single();
 if (insertedProduct) {
+  // ===============================
+// SAVE COLOR VARIANTS
+// ===============================
+
+const productId = insertedProduct.id;
+
+const variantRows = Array.from(
+  document.querySelectorAll(".variant-row")
+);
+
+for (const row of variantRows) {
+  const colorName =
+    (row.querySelector(".variant-color-name") as HTMLInputElement)?.value.trim() ?? "";
+
+  const price =
+    Number(
+      (row.querySelector(".variant-price") as HTMLInputElement)?.value || 0
+    );
+
+  const stock =
+    Number(
+      (row.querySelector(".variant-stock") as HTMLInputElement)?.value || 0
+    );
+
+  const imageFiles =
+    (row.querySelector(".variant-images") as HTMLInputElement)?.files;
+
+  const {
+    data: variant,
+    error: variantError,
+  } = await supabase
+    .from("product_variants")
+    .insert({
+      product_id: productId,
+      color_name: colorName,
+      price,
+      stock,
+    })
+    .select("id")
+    .single();
+
+  if (variantError) {
+    console.error(variantError);
+    continue;
+  }
+
+  if (!imageFiles) continue;
+
+  for (const file of Array.from(imageFiles)) {
+    const ext =
+      file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+
+    const fileName =
+      `variants/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } =
+      await supabase.storage
+        .from("product-images")
+        .upload(fileName, file);
+
+    if (uploadError) continue;
+
+    const publicUrl =
+      supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName)
+        .data.publicUrl;
+
+    await supabase
+      .from("product_images")
+      .insert({
+        product_id: productId,
+        image_url: publicUrl,
+        variant_id: variant.id,
+      });
+  }
+}
+
+// ===============================
   let sortOrder = 1;
 
   for (const galleryFile of galleryFiles) {
@@ -3035,7 +2951,87 @@ if (insertedProduct) {
       console.error(galleryUploadError);
       continue;
     }
+// ==============================
+// SAVE COLOR VARIANTS
+// ==============================
 
+const variantCards = document.querySelectorAll(".variant-card");
+
+for (const card of variantCards) {
+
+  const colorName =
+    (card.querySelector(".variant-color-name") as HTMLInputElement)?.value.trim();
+
+  if (!colorName) continue;
+
+  const colorCode =
+    (card.querySelector(".variant-color-code") as HTMLInputElement)?.value;
+
+  const price =
+    Number(
+      (card.querySelector(".variant-price") as HTMLInputElement)?.value || 0
+    );
+
+  const stock =
+    Number(
+      (card.querySelector(".variant-stock") as HTMLInputElement)?.value || 0
+    );
+
+  const imageFiles = Array.from(
+    (
+      card.querySelector(".variant-images") as HTMLInputElement
+    )?.files ?? []
+  );
+
+  const { data: variant } = await supabase
+    .from("product_variants")
+    .insert({
+      product_id: insertedProduct.id,
+      color_name: colorName,
+      color_code: colorCode,
+      price,
+      stock,
+    })
+    .select("id")
+    .single();
+
+  if (!variant) continue;
+
+  let imageOrder = 1;
+
+  for (const file of imageFiles) {
+
+    const ext =
+      file.name.split(".").pop() ?? "jpg";
+
+    const path =
+      `variants/${crypto.randomUUID()}.${ext}`;
+
+    const { error } =
+      await supabase.storage
+        .from("product-images")
+        .upload(path, file);
+
+    if (error) continue;
+
+    const { data } =
+      supabase.storage
+        .from("product-images")
+        .getPublicUrl(path);
+
+    await supabase
+      .from("product_images")
+      .insert({
+        product_id: insertedProduct.id,
+        variant_id: variant.id,
+        image_url: data.publicUrl,
+        sort_order: imageOrder++,
+        is_primary: false,
+      });
+
+  }
+
+}
     const { data } =
       supabase.storage
         .from("product-images")

@@ -1,5 +1,6 @@
 import "./style.css";
-import { getProducts} from "./product";
+import { getProducts } from "./product";
+import { supabase } from "./supabase";
 
 const products = await getProducts();
 
@@ -10,6 +11,18 @@ const productId = Number(params.get("id"));
 const product =
   products.find((item) => item.id === productId) ??
   products[0];
+  // =========================
+// LOAD PRODUCT VARIANTS
+// =========================
+
+const { data: variants } = await supabase
+  .from("product_variants")
+  .select("*")
+  .eq("product_id", product.id)
+  .order("id", { ascending: true });
+
+let selectedVariant =
+  variants?.[0] ?? null;
 
 if (!product) {
   document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
@@ -41,6 +54,40 @@ const escapeHtml = (value: string) =>
     .replaceAll("'", "&#039;");
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
+${
+  variants && variants.length
+    ? `
+<div class="variant-selector">
+
+<h3>Select Colour</h3>
+
+<div class="variant-buttons">
+
+${variants
+  .map(
+    (variant) => `
+<button
+class="variant-button ${
+selectedVariant?.id ===
+variant.id
+? "active-variant"
+: ""
+}"
+data-id="${variant.id}"
+data-color="${variant.color_name}"
+style="background:${variant.color_code || "#ddd"}"
+title="${variant.color_name}">
+</button>
+`
+  )
+  .join("")}
+
+</div>
+
+</div>
+`
+    : ""
+}
 <div class="product-details-page">
 
 <header class="details-header">
@@ -92,9 +139,15 @@ ${escapeHtml(product.code)}
 
 </p>
 
-<div class="details-price">
+<div
+id="product-price"
+class="details-price"
+>
 
-${money(product.price)}
+${money(
+  selectedVariant?.price ??
+  product.price
+)}
 
 </div>
 
@@ -134,10 +187,12 @@ ${escapeHtml(product.print)}
 
 <strong>Stock</strong>
 
-<p>
+<p id="product-stock">
 
 ${
-  product.available
+  (selectedVariant?.stock ??
+  (product.available ? 1 :
+    0) )> 0
     ? "In Stock"
     : "Sold Out"
 }
@@ -185,13 +240,26 @@ class="related-products"
 // PRODUCT GALLERY
 // =========================
 
-import { supabase } from "./supabase";
 
 const { data: galleryImages } = await supabase
   .from("product_images")
   .select("*")
   .eq("product_id", product.id)
-  .order("sort_order", { ascending: true });
+  .order("sort_order", {
+    ascending: true,
+  });
+
+const variantGallery =
+  galleryImages?.filter(
+    (image) =>
+      image.variant_id ===
+      selectedVariant?.id
+  ) ?? [];
+
+const defaultGallery =
+  variantGallery.length
+    ? variantGallery
+    : galleryImages ?? [];
 
 const thumbnails =
   document.querySelector<HTMLDivElement>(
@@ -202,26 +270,78 @@ const mainImage =
   document.querySelector<HTMLImageElement>(
     "#main-product-image"
   );
+const priceElement =
+document.querySelector<HTMLElement>(
+"#product-price"
+);
 
+const stockElement =
+document.querySelector<HTMLElement>(
+"#product-stock"
+);
 const allImages = [
-  product.image,
-  ...(galleryImages?.map((img) => img.image_url) ?? []),
+  ...new Set([
+    defaultGallery.length
+      ? defaultGallery[0].image_url
+      : product.image,
+
+    ...defaultGallery.map(
+      (image) => image.image_url
+    ),
+  ]),
 ];
 
 if (thumbnails) {
+
   thumbnails.innerHTML = allImages
     .map(
-      (image, index) => `
-      <img
-        src="${image}"
-        class="gallery-thumb ${
-          index === 0 ? "active-thumb" : ""
-        }"
-        data-image="${image}"
-      >
-    `
+      (img, index) => `
+<img
+src="${img.image_url}"
+class="gallery-thumb ${
+index === 0
+? "active-thumb"
+: ""
+}"
+data-image="${img.image_url}">
+`
     )
     .join("");
+
+  document
+    .querySelectorAll<HTMLImageElement>(
+      ".gallery-thumb"
+    )
+    .forEach((thumb) => {
+
+      thumb.addEventListener(
+        "click",
+        () => {
+
+          if (mainImage) {
+            mainImage.src =
+              thumb.dataset.image ?? "";
+          }
+
+          document
+            .querySelectorAll(
+              ".gallery-thumb"
+            )
+            .forEach((item) =>
+              item.classList.remove(
+                "active-thumb"
+              )
+            );
+
+          thumb.classList.add(
+            "active-thumb"
+          );
+
+        }
+      );
+
+    });
+
 }
 
 document
@@ -426,18 +546,20 @@ document
       );
 
       const existing =
-        cart.find(
-          (item: any) =>
-            item.product.id === product.id
-        );
+  cart.find(
+    (item: any) =>
+      item.product.id === product.id &&
+      item.variant?.id === selectedVariant?.id
+  );
 
       if (existing) {
         existing.quantity++;
       } else {
-        cart.push({
-          product,
-          quantity: 1,
-        });
+       cart.push({
+  product,
+  variant: selectedVariant,
+  quantity: 1,
+});
       }
 
       localStorage.setItem(
@@ -464,13 +586,13 @@ document
   ?.addEventListener(
     "click",
     () => {
-
-      const cart = [
-        {
-          product,
-          quantity: 1,
-        },
-      ];
+const cart = [
+  {
+    product,
+    variant: selectedVariant,
+    quantity: 1,
+  },
+];
 
       localStorage.setItem(
         "aliya-cart",
@@ -481,3 +603,95 @@ document
         "/#products";
     }
   );
+// =========================
+// VARIANT SWITCH
+// =========================
+
+document
+  .querySelectorAll(".variant-button")
+  .forEach((button) => {
+
+    button.addEventListener("click", async () => {
+
+      const variantId =
+        button.getAttribute("data-id");
+
+      if (!variantId) return;
+
+      const { data: images } =
+        await supabase
+          .from("product_images")
+          .select("*")
+          .eq("variant_id", variantId)
+          .order("sort_order");
+
+      if (!images?.length) return;
+
+      if (mainImage) {
+        mainImage.src = images[0].image_url;
+      
+      mainImage.alt =
+selectedVariant?.color_name ??
+product.name;}
+
+      selectedVariant = variants?.find(
+(v) => v.id == Number(variantId)
+) ?? null;
+
+if (
+priceElement &&
+selectedVariant
+) {
+priceElement.textContent =
+money(
+selectedVariant.price ??
+product.price
+);
+}
+
+if (
+stockElement &&
+selectedVariant
+) {
+stockElement.textContent =
+(selectedVariant.stock ?? 0) > 0
+? "In Stock"
+: "Sold Out";
+}
+
+document
+.querySelectorAll(
+".variant-button"
+)
+.forEach((btn) =>
+btn.classList.remove(
+"active-variant"
+)
+);
+
+document.title =
+`${product.name} - ${
+selectedVariant?.color_name ??
+""
+}`;
+
+button.classList.add(
+"active-variant"
+);
+
+      if (thumbnails) {
+        thumbnails.innerHTML = images
+          .map(
+            (img) => `
+<img
+src="${img.image_url}"
+class="gallery-thumb"
+data-image="${img.image_url}">
+`
+          )
+          .join("");
+      }
+
+    });
+
+  });

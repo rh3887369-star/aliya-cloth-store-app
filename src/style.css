@@ -4258,3 +4258,34 @@ border-radius:10px;
 text-decoration:none;
 
 }
+.variant-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.variant-button:hover {
+  transform: scale(1.08);
+}
+
+.active-variant {
+  border: 3px solid #111;
+  transform: scale(1.12);
+  box-shadow: 0 0 0 3px rgba(0,0,0,.12);
+}
+
+.gallery-thumb{
+cursor:pointer;
+transition:.25s;
+}
+
+.gallery-thumb:hover{
+transform:scale(1.06);
+}
+
+.active-thumb{
+border:2px solid #111;
+}
